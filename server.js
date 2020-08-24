@@ -1,8 +1,13 @@
-const tracer = require('dd-trace').init();
+const tracer = require('dd-trace').init({
+    logInjection: true
+});
 
 var express = require('express');
 var { graphqlHTTP } = require('express-graphql');
 var { buildSchema } = require('graphql');
+var winston = require('winston');
+
+winston.add(new winston.transports.Console())
 
 var schema = buildSchema(`
   type Query {
@@ -13,6 +18,15 @@ var schema = buildSchema(`
 var root = { hello: () => 'Hello world!' };
 
 var app = express();
+
+function loggingMiddleware(req, res, next) {
+    if (req.url.startsWith('')) {      
+      winston.info(req);      
+    }
+    next();
+  }
+  app.use(loggingMiddleware);
+
 app.use('/graphql', graphqlHTTP({
   schema: schema,
   rootValue: root,
