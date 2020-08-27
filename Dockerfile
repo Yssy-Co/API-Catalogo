@@ -1,11 +1,14 @@
 FROM alpine:latest
 
 WORKDIR /app
-ADD server.js .
+ADD . /app
 
 RUN apk add --update npm
-RUN npm install express express-graphql graphql dd-trace --save
+RUN npm install winston graphql-yoga nexus-prisma graphql dd-trace --save
 
-CMD ["node","server.js"]
+RUN npx prisma introspect
+RUN npx prisma generate
+
+CMD ["node","src"]
 
 EXPOSE 4000
