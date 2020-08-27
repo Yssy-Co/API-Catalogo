@@ -1,5 +1,8 @@
 const tracer = require('dd-trace').init({
-  logInjection: true
+  logInjection: true,
+  service: 'api-catalogo',
+  env: 'yssy-demo',
+  runtimeMetrics: true
 });
 
 var winston = require('winston');
