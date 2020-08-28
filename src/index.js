@@ -48,23 +48,16 @@ const prisma = new PrismaClient({
   ],
 });
 
-prisma.$on('query', e => {
-  const span = tracer.scope().active()
-  const child = tracer.startSpan('prisma.query');
+prisma.$on('query', e => {  
+  /*var child = tracer.startSpan('prisma.query', {childOf: tracer.scope().active().context()});
 
-  tracer.scope().activate(child, () => {
-    const span = tracer.scope().active() 
-  });
+  child._spanContext._traceId = tracer.scope().active().context()._traceId;
+  child._spanContext._parentId = tracer.scope().active().context()._spanId;
+
   child.setTag('query', e.query);
-  child.setTag('params', JSON.parse(e.params));
-  child.setTag('duration', e.duration);
-  /*e.timestamp;
-  e.query;
-  e.params;
-  e.duration;
-  e.target;*/  
-  child.finish();
-  winston.info(e);
+  child.setTag('params', JSON.parse(e.params));  
+  */
+  winston.info(e);  
 });
 
 new GraphQLServer({
