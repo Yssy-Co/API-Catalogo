@@ -49,8 +49,12 @@ const prisma = new PrismaClient({
 });
 
 prisma.$on('query', e => {
-  var span = tracer.scope().active() 
-  var child = tracer.startSpan('prisma.query');  
+  const span = tracer.scope().active()
+  const child = tracer.startSpan('prisma.query');
+
+  tracer.scope().activate(child, () => {
+    const span = tracer.scope().active() 
+  });
   child.setTag('query', e.query);
   child.setTag('params', JSON.parse(e.params));
   child.setTag('duration', e.duration);
@@ -58,8 +62,8 @@ prisma.$on('query', e => {
   e.query;
   e.params;
   e.duration;
-  e.target;*/
-  child.finish()
+  e.target;*/  
+  child.finish();
   winston.info(e);
 });
 
