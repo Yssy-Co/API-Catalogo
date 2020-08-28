@@ -47,7 +47,7 @@ const prisma = new PrismaClient({
     },
   ],
 });
-
+ 
 prisma.$on('query', e => {
   var span = tracer.startSpan('prisma.query');
   span.setTag('query', e.query);
