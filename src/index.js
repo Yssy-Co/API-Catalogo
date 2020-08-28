@@ -49,11 +49,16 @@ const prisma = new PrismaClient({
 });
 
 prisma.$on('query', e => {
+  var span = tracer.startSpan('prisma.query');
+  span.setTag('query', e.query);
+  span.setTag('params', e.params);
+  span.setTag('duration', e.duration);
   e.timestamp;
   e.query;
   e.params;
   e.duration;
   e.target;
+  span.finish()
   winston.info(e);
 });
 
