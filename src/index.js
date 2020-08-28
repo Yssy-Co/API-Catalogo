@@ -47,18 +47,19 @@ const prisma = new PrismaClient({
     },
   ],
 });
- 
+
 prisma.$on('query', e => {
-  var span = tracer.startSpan('prisma.query');
-  span.setTag('query', e.query);
-  span.setTag('params', JSON.parse(e.params));
-  span.setTag('duration', e.duration);
+  var span = tracer.scope().active() 
+  var child = tracer.startSpan('prisma.query');  
+  child.setTag('query', e.query);
+  child.setTag('params', JSON.parse(e.params));
+  child.setTag('duration', e.duration);
   /*e.timestamp;
   e.query;
   e.params;
   e.duration;
   e.target;*/
-  span.finish()
+  child.finish()
   winston.info(e);
 });
 
