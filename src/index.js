@@ -70,9 +70,9 @@ prisma.$use( async (params, next) => {
     //console.log(item)
     var child = tracer.startSpan('prisma.middleware', {childOf: tracer.scope().active().context()})
     child.setTag('item', item);
-    var headers = {}
-    tracer.inject(tracer.scope().active().context(), opentracing.FORMAT_HTTP_HEADERS, headers)
-    res = request('GET', endpoint);
+    var injectHeaders = {}
+    tracer.inject(tracer.scope().active().context(), opentracing.FORMAT_HTTP_HEADERS, injectHeaders)
+    res = request('GET', endpoint, {headers: injectHeaders});
     if (res.statusCode != 200)
     {
       winston.info("Sem estoque do item "+item.codigo);
