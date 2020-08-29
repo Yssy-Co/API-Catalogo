@@ -5,6 +5,10 @@ const tracer = require('dd-trace').init({
   runtimeMetrics: true
 });
 
+const opentracing = require('opentracing')
+
+opentracing.initGlobalTracer(tracer)
+
 var winston = require('winston');
 winston.add(new winston.transports.Console())
 
@@ -12,6 +16,9 @@ const { GraphQLServer } = require('graphql-yoga')
 const { makeSchema, objectType, intArg, stringArg } = require('@nexus/schema')
 const { PrismaClient } = require('@prisma/client')
 const { nexusPrismaPlugin } = require('nexus-prisma')
+
+var request = require('sync-request');
+const { child } = require('winston');
 
 const Item = objectType({
   name: 'Item',
@@ -48,6 +55,36 @@ const prisma = new PrismaClient({
   ],
 });
 
+prisma.$use( async (params, next) => {
+  
+  // Adicionar verificação/foreach aqui
+
+  var endpoint = "http://"+process.env.API_ESTOQUE+"/conferir-estoque";
+  winston.info("Endereço de API de Estoque: "+endpoint);  
+
+  var result = await next(params)
+
+  resultado = result;
+
+  result.forEach(function(item, index, object){
+    //console.log(item)
+    var child = tracer.startSpan('prisma.middleware', {childOf: tracer.scope().active().context()})
+    child.setTag('item', item);
+    var headers = {}
+    tracer.inject(tracer.scope().active().context(), opentracing.FORMAT_HTTP_HEADERS, headers)
+    res = request('GET', endpoint);
+    if (res.statusCode != 200)
+    {
+      winston.info("Sem estoque do item "+item.codigo);
+      resultado.splice(index,1);
+    }
+    child.finish()
+  });  
+
+  return resultado;
+});
+
+/*
 prisma.$on('query', e => {  
   /*var child = tracer.startSpan('prisma.query', {childOf: tracer.scope().active().context()});
 
@@ -57,9 +94,29 @@ prisma.$on('query', e => {
   child.setTag('query', e.query);
   child.setTag('params', JSON.parse(e.params));  
   */
-  winston.info(e);  
+  //winston.info(e);
+  /*
+  var endpoint = "http://"+process.env.API_ESTOQUE+"/conferir-estoque";
+  winston.info("Endereço de API de Estoque: "+endpoint)  
+    
+  fetch(endpoint)  
+  .then(function(res){
+    if (res.ok) {
+      return res.text()
+    }
+    else{
+      winston.warn("Não consta no estoque");      
+    }
+  }   
+  )
+  .then(function(body){
+    if (body) {
+      winston.info(body) 
+    }
+  }
+  )  
 });
-
+*/
 new GraphQLServer({
   schema: makeSchema({
     types: [Query, Item],
